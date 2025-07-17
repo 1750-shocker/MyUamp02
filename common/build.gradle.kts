@@ -44,4 +44,9 @@ dependencies {
 
     implementation(libs.glide)
     ksp(libs.glide.compiler)
+    api(libs.androidx.media)
+    api(libs.exoplayer.ui)
+    api(libs.exoplayer.mediasession)
+    api(libs.exoplayer.core)
+    api(libs.gson)
 }

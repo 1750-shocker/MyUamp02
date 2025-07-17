@@ -11,6 +11,9 @@ material = "1.12.0"
 activity = "1.10.0"
 constraintlayout = "2.2.0"
 glide = "4.16.0"
+androidx_media_version = "1.0.1"
+exoplayer_version = "2.16.0"
+gson = "2.13.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -23,6 +26,11 @@ androidx-activity = { group = "androidx.activity", name = "activity", version.re
 androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
 glide-compiler = { module = "com.github.bumptech.glide:compiler", version.ref = "glide" }
 glide = { module = "com.github.bumptech.glide:glide", version.ref = "glide" }
+androidx-media = { group = "androidx.media", name = "media", version.ref = "androidx_media_version" }
+exoplayer-core = { group = "com.google.android.exoplayer", name = "exoplayer-core", version.ref = "exoplayer_version" }
+exoplayer-ui = { group = "com.google.android.exoplayer", name = "exoplayer-ui", version.ref = "exoplayer_version" }
+exoplayer-mediasession = { group = "com.google.android.exoplayer", name = "exoplayer-mediasession", version.ref = "exoplayer_version" }
+gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
