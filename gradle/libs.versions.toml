@@ -14,6 +14,8 @@ glide = "4.16.0"
 androidx_media_version = "1.0.1"
 exoplayer_version = "2.16.0"
 gson = "2.13.0"
+fragmentKtxVersion = "1.8.6"
+lifecycleViewmodelKtx = "2.8.7"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -31,6 +33,8 @@ exoplayer-core = { group = "com.google.android.exoplayer", name = "exoplayer-cor
 exoplayer-ui = { group = "com.google.android.exoplayer", name = "exoplayer-ui", version.ref = "exoplayer_version" }
 exoplayer-mediasession = { group = "com.google.android.exoplayer", name = "extension-mediasession", version.ref = "exoplayer_version" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
+fragment-ktx = { module = "androidx.fragment:fragment-ktx", version.ref = "fragmentKtxVersion" }
+androidx-lifecycle-viewmodel-ktx = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "lifecycleViewmodelKtx" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

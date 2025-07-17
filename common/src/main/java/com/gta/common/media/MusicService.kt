@@ -123,7 +123,6 @@ open class MusicService : MediaBrowserServiceCompat() {
     }
 
 
-
     @ExperimentalCoroutinesApi
     override fun onCreate() {
         super.onCreate()
@@ -132,8 +131,9 @@ open class MusicService : MediaBrowserServiceCompat() {
         //通知栏的音乐被点击后可以启动主页面，这个intent是给session的
         val sessionActivityPendingIntent =
             packageManager?.getLaunchIntentForPackage(packageName)?.let { sessionIntent ->
-                PendingIntent.getActivity(this, 0, sessionIntent, 0)
+                PendingIntent.getActivity(this, 0, sessionIntent, PendingIntent.FLAG_IMMUTABLE)
             }
+        currentPlayer = exoPlayer
 
         // 在onCreate里面新建MediaSession
         mediaSession = MediaSessionCompat(this, "MusicService")
@@ -143,11 +143,11 @@ open class MusicService : MediaBrowserServiceCompat() {
             }
         sessionToken = mediaSession.sessionToken
 
-        notificationManager = UampNotificationManager(
+        /*notificationManager = UampNotificationManager(
             this,
             mediaSession.sessionToken,
             PlayerNotificationListener()
-        )
+        )*/
 
         // The media library is built from a remote JSON file. We'll create the source here,
         // and then use a suspend function to perform the download off the main thread.
@@ -173,7 +173,7 @@ open class MusicService : MediaBrowserServiceCompat() {
         mediaSessionConnector.setPlaybackPreparer(UampPlaybackPreparer())
         mediaSessionConnector.setQueueNavigator(UampQueueNavigator(mediaSession))
 
-        notificationManager.showNotificationForPlayer(currentPlayer)
+//        notificationManager.showNotificationForPlayer(currentPlayer)
 
 
         storage = PersistentStorage.getInstance(applicationContext)
@@ -185,7 +185,6 @@ open class MusicService : MediaBrowserServiceCompat() {
      * playback to continue and allow users to stop it with the notification.
      */
     override fun onTaskRemoved(rootIntent: Intent) {
-        saveRecentSongToStorage()
         super.onTaskRemoved(rootIntent)
 
         /**
@@ -228,6 +227,7 @@ open class MusicService : MediaBrowserServiceCompat() {
                 false
             )
         }
+
         /**
          * By default return the browsable root. Treat the EXTRA_RECENT flag as a special case
          * and return the recent root instead.语音助手从最近播放开始，其他从__/__根目录开始
@@ -304,7 +304,8 @@ open class MusicService : MediaBrowserServiceCompat() {
         // Set playlist and prepare.
         //这里才是播放器真正开始播放的地方
         currentPlayer.setMediaItems(
-            metadataList.map { it.toMediaItem() }, initialWindowIndex, playbackStartPositionMs)
+            metadataList.map { it.toMediaItem() }, initialWindowIndex, playbackStartPositionMs
+        )
         currentPlayer.prepare()
     }
 
@@ -319,12 +320,12 @@ open class MusicService : MediaBrowserServiceCompat() {
         val description = currentPlaylistItems[currentMediaItemIndex].description
         val position = currentPlayer.currentPosition
 
-        serviceScope.launch {
+        /*serviceScope.launch {
             storage.saveRecentSong(
                 description,
                 position
             )
-        }
+        }*/
     }
 
 
@@ -377,6 +378,7 @@ open class MusicService : MediaBrowserServiceCompat() {
                 recentSong.description.extras
             )
         }
+
         //通过媒体ID准备/播放
         override fun onPrepareFromMediaId(
             mediaId: String,
@@ -393,7 +395,10 @@ open class MusicService : MediaBrowserServiceCompat() {
                 } else {
 
                     val playbackStartPositionMs =
-                        extras?.getLong(MEDIA_DESCRIPTION_EXTRAS_START_PLAYBACK_POSITION_MS, C.TIME_UNSET)
+                        extras?.getLong(
+                            MEDIA_DESCRIPTION_EXTRAS_START_PLAYBACK_POSITION_MS,
+                            C.TIME_UNSET
+                        )
                             ?: C.TIME_UNSET
 
                     preparePlaylist(
@@ -469,7 +474,7 @@ open class MusicService : MediaBrowserServiceCompat() {
             when (playbackState) {
                 Player.STATE_BUFFERING,
                 Player.STATE_READY -> {
-                    notificationManager.showNotificationForPlayer(currentPlayer)
+//                    notificationManager.showNotificationForPlayer(currentPlayer)
                     if (playbackState == Player.STATE_READY) {
 
                         // When playing/paused save the current media item in persistent
@@ -487,8 +492,9 @@ open class MusicService : MediaBrowserServiceCompat() {
                         }
                     }
                 }
+
                 else -> {
-                    notificationManager.hideNotification()
+//                    notificationManager.hideNotification()
                 }
             }
         }
@@ -496,7 +502,8 @@ open class MusicService : MediaBrowserServiceCompat() {
         override fun onEvents(player: Player, events: Player.Events) {
             if (events.contains(EVENT_POSITION_DISCONTINUITY)
                 || events.contains(EVENT_MEDIA_ITEM_TRANSITION)
-                || events.contains(EVENT_PLAY_WHEN_READY_CHANGED)) {
+                || events.contains(EVENT_PLAY_WHEN_READY_CHANGED)
+            ) {
                 currentMediaItemIndex = if (currentPlaylistItems.isNotEmpty()) {
                     constrainValue(
                         player.currentMediaItemIndex,
@@ -511,7 +518,8 @@ open class MusicService : MediaBrowserServiceCompat() {
             var message = R.string.generic_error;
             Log.e(TAG, "Player error: " + error.errorCodeName + " (" + error.errorCode + ")");
             if (error.errorCode == PlaybackException.ERROR_CODE_IO_BAD_HTTP_STATUS
-                || error.errorCode == PlaybackException.ERROR_CODE_IO_FILE_NOT_FOUND) {
+                || error.errorCode == PlaybackException.ERROR_CODE_IO_FILE_NOT_FOUND
+            ) {
                 message = R.string.error_media_not_found;
             }
             Toast.makeText(
