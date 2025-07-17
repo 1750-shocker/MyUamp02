@@ -29,7 +29,7 @@ glide = { module = "com.github.bumptech.glide:glide", version.ref = "glide" }
 androidx-media = { group = "androidx.media", name = "media", version.ref = "androidx_media_version" }
 exoplayer-core = { group = "com.google.android.exoplayer", name = "exoplayer-core", version.ref = "exoplayer_version" }
 exoplayer-ui = { group = "com.google.android.exoplayer", name = "exoplayer-ui", version.ref = "exoplayer_version" }
-exoplayer-mediasession = { group = "com.google.android.exoplayer", name = "exoplayer-mediasession", version.ref = "exoplayer_version" }
+exoplayer-mediasession = { group = "com.google.android.exoplayer", name = "extension-mediasession", version.ref = "exoplayer_version" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 
 [plugins]
