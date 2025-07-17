@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.ksp)
+    id("kotlin-kapt")
 }
 
 android {
@@ -43,7 +44,7 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
 
     implementation(libs.glide)
-    ksp(libs.glide.compiler)
+    kapt(libs.glide.compiler)
     api(libs.androidx.media)
     api(libs.exoplayer.ui)
     api(libs.exoplayer.mediasession)
