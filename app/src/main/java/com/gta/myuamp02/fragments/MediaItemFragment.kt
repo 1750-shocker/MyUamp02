@@ -22,9 +22,10 @@ class MediaItemFragment : Fragment(){
     private val mediaItemFragmentViewModel by viewModels<MediaItemFragmentViewModel> {
         InjectorUtils.provideMediaItemFragmentViewModel(requireContext(), mediaId)
     }
-
+//表示当前 Fragment 对应的媒体项 ID。这个 ID 将用来加载特定的媒体数据
     private lateinit var mediaId: String
     private lateinit var binding: FragmentMediaitemListBinding
+    //适配器的点击事件会调用 mainActivityViewModel.mediaItemClicked() 方法，传递被点击的媒体项
     private val listAdapter = MediaItemAdapter { clickedItem ->
         mainActivityViewModel.mediaItemClicked(clickedItem)
     }
@@ -50,13 +51,14 @@ class MediaItemFragment : Fragment(){
 
         // Always true, but lets lint know that as well.
         mediaId = arguments?.getString(MEDIA_ID_ARG) ?: return
-
+//观察 mediaItemFragmentViewModel 的 mediaItems LiveData，根据是否有数据决定加载动画
         mediaItemFragmentViewModel.mediaItems.observe(viewLifecycleOwner,
             Observer { list ->
                 binding.loadingSpinner.visibility =
                     if (list?.isNotEmpty() == true) View.GONE else View.VISIBLE
                 listAdapter.submitList(list)
             })
+        //当发生网络错误时，隐藏加载中的旋转器，并显示网络错误视图
         mediaItemFragmentViewModel.networkError.observe(viewLifecycleOwner,
             Observer { error ->
                 if (error) {

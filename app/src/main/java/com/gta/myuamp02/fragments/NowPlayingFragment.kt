@@ -39,32 +39,37 @@ class NowPlayingFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         // Always true, but lets lint know that as well.
+        //获取 activity 的引用，如果 activity 为 null（即 Fragment 未附加到活动），则直接返回
         val context = activity ?: return
 
-        // Attach observers to the LiveData coming from this ViewModel
+        // 根据持有的当前mediaMetadata来更新UI
         nowPlayingViewModel.mediaMetadata.observe(viewLifecycleOwner,
             Observer { mediaItem -> updateUI(view, mediaItem) })
+        //根据播放状态更新播放按钮的图标
         nowPlayingViewModel.mediaButtonRes.observe(viewLifecycleOwner,
             Observer { res ->
                 binding.mediaButton.setImageResource(res)
             })
+        //当播放进度发生变化时，更新显示的播放位置
         nowPlayingViewModel.mediaPosition.observe(viewLifecycleOwner,
             Observer { pos ->
                 binding.position.text = NowPlayingFragmentViewModel.NowPlayingMetadata.timestampToMSS(context, pos)
             })
 
-        // Setup UI handlers for buttons
+        // 当按钮被点击时，通过 mainActivityViewModel.playMediaId() 方法开始播放当前媒体项。
         binding.mediaButton.setOnClickListener {
             nowPlayingViewModel.mediaMetadata.value?.let { mainActivityViewModel.playMediaId(it.id) }
         }
 
-        // Initialize playback duration and position to zero
+        // 初始化播放时长和播放进度的显示
         binding.duration.text = NowPlayingFragmentViewModel.NowPlayingMetadata.timestampToMSS(context, 0L)
         binding.position.text = NowPlayingFragmentViewModel.NowPlayingMetadata.timestampToMSS(context, 0L)
     }
 
     /**
-     * Internal function used to update all UI elements except for the current item playback
+     * 显示当前播放媒体的封面、标题、副标题和持续时长
+     * 如果 albumArtUri 是空 URI（即没有专辑封面），则显示默认的专辑图标
+     * 如果有封面图 URI，则使用 Glide 加载并显示专辑封面图
      */
     private fun updateUI(view: View, metadata: NowPlayingFragmentViewModel.NowPlayingMetadata) = with(binding) {
         if (metadata.albumArtUri == Uri.EMPTY) {

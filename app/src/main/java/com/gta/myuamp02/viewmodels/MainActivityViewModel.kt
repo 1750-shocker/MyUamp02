@@ -21,6 +21,7 @@ import com.gta.myuamp02.utils.Event
 class MainActivityViewModel(
     private val musicServiceConnection: MusicServiceConnection
 ) : ViewModel() {
+    //观察 musicServiceConnection.isConnected，如果连接成功，则返回 rootMediaId，否则返回 null
     val rootMediaId: LiveData<String?> =
         musicServiceConnection.isConnected.map { isConnected ->
             if (isConnected) {
@@ -36,7 +37,7 @@ class MainActivityViewModel(
 
     val navigateToFragment: LiveData<Event<FragmentNavigationRequest>> get() = _navigateToFragment
     private val _navigateToFragment = MutableLiveData<Event<FragmentNavigationRequest>>()
-
+//点击列表项时触发的方法
     fun mediaItemClicked(clickedItem: MediaItemData) {
         if (clickedItem.browsable) {
             browseToItem(clickedItem)
@@ -45,16 +46,19 @@ class MainActivityViewModel(
             showFragment(NowPlayingFragment.newInstance())
         }
     }
-
+//触发界面上的导航操作
     fun showFragment(fragment: Fragment, backStack: Boolean = true, tag: String? = null) {
         _navigateToFragment.value = Event(FragmentNavigationRequest(fragment, backStack, tag))
     }
-
+//更新 LiveData，通知界面导航到该媒体项
     private fun browseToItem(mediaItem: MediaItemData) {
         _navigateToMediaItem.value = Event(mediaItem.mediaId)
     }
 
-    //提供这个方法就是为了在点击播放按钮时，能够根据当前的播放状态来决定是播放还是暂停。
+    /**
+     * 点击列表项时触发的方法, 播放指定的媒体项，这个方法涉及与后台交互
+     * 和下面一个方法的行为基本是一样的，只是参数不同，但是都是取mediaId来播
+     */
     fun playMedia(mediaItem: MediaItemData, pauseAllowed: Boolean = true) {
         val nowPlaying = musicServiceConnection.nowPlaying.value
         val transportControls = musicServiceConnection.transportControls
@@ -78,10 +82,14 @@ class MainActivityViewModel(
                 }
             }
         } else {
+            //如果当前媒体没有准备好，则调用 playFromMediaId 方法播放指定的媒体项
             transportControls.playFromMediaId(mediaItem.mediaId, null)
         }
     }
 
+    /**
+     * 点击播放按钮，根据当前正在播放的媒体 ID 播放或暂停音乐
+     */
     fun playMediaId(mediaId: String) {
         val nowPlaying = musicServiceConnection.nowPlaying.value
         val transportControls = musicServiceConnection.transportControls
@@ -101,6 +109,7 @@ class MainActivityViewModel(
                 }
             }
         } else {
+            //如果当前媒体没有准备好，则调用 playFromMediaId 方法播放指定的媒体项
             transportControls.playFromMediaId(mediaId, null)
         }
     }
@@ -119,6 +128,7 @@ class MainActivityViewModel(
 /**
  * Helper class used to pass fragment navigation requests between MainActivity
  * and its corresponding ViewModel.
+ * 用于传递 Fragment 导航请求
  */
 data class FragmentNavigationRequest(
     val fragment: Fragment,

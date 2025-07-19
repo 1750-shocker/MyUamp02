@@ -3,13 +3,10 @@ package com.gta.common.media
 
 import android.app.Notification
 import android.app.PendingIntent
-import android.content.ComponentName
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.os.ResultReceiver
-import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaBrowserCompat.MediaItem
 import android.support.v4.media.MediaDescriptionCompat
 import android.support.v4.media.MediaMetadataCompat
@@ -27,13 +24,11 @@ import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.Player.EVENT_MEDIA_ITEM_TRANSITION
 import com.google.android.exoplayer2.Player.EVENT_PLAY_WHEN_READY_CHANGED
 import com.google.android.exoplayer2.Player.EVENT_POSITION_DISCONTINUITY
-import com.google.android.exoplayer2.Player.EVENT_TIMELINE_CHANGED
 import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.exoplayer2.audio.AudioAttributes
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
 import com.google.android.exoplayer2.ext.mediasession.TimelineQueueNavigator
 import com.google.android.exoplayer2.ui.PlayerNotificationManager
-import com.google.android.exoplayer2.util.Util
 import com.google.android.exoplayer2.util.Util.constrainValue
 import com.gta.common.R
 import com.gta.common.media.extensions.album
@@ -50,8 +45,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
-import kotlin.math.max
-import kotlin.math.min
 
 /**
  * This class is the entry point for browsing and playback commands from the APP's UI
@@ -110,10 +103,7 @@ open class MusicService : MediaBrowserServiceCompat() {
 
     private val playerListener = PlayerEventListener()
 
-    /**
-     * Configure ExoPlayer to handle audio focus for us.
-     * See [Player.AudioComponent.setAudioAttributes] for details.
-     */
+
     private val exoPlayer: ExoPlayer by lazy {
         SimpleExoPlayer.Builder(this).build().apply {
             setAudioAttributes(uAmpAudioAttributes, true)

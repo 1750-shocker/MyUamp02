@@ -15,7 +15,7 @@ import java.util.Locale
  */
 fun String?.containsCaseInsensitive(other: String?) =
     if (this != null && other != null) {
-        lowercase(Locale.getDefault()).contains(other.lowercase(Locale.getDefault()))
+        toLowerCase(Locale.getDefault()).contains(other.toLowerCase(Locale.getDefault()))
     } else {
         this == other
     }
