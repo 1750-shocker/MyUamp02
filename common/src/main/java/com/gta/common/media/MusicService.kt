@@ -138,11 +138,11 @@ open class MusicService : MediaBrowserServiceCompat() {
         //公开 sessionToken 供外部（MediaController）连接
         sessionToken = mediaSession.sessionToken
 
-        /*notificationManager = UampNotificationManager(
+        notificationManager = UampNotificationManager(
             this,
             mediaSession.sessionToken,
             PlayerNotificationListener()
-        )*/
+        )
 
         // The media library is built from a remote JSON file. We'll create the source here,
         // and then use a suspend function to perform the download off the main thread.
@@ -223,8 +223,11 @@ open class MusicService : MediaBrowserServiceCompat() {
         val rootExtras = Bundle().apply {
             putBoolean(
                 MEDIA_SEARCH_SUPPORTED,
-                false
+                true
             )
+            putBoolean(CONTENT_STYLE_SUPPORTED, true)
+            putInt(CONTENT_STYLE_BROWSABLE_HINT, CONTENT_STYLE_GRID)
+            putInt(CONTENT_STYLE_PLAYABLE_HINT, CONTENT_STYLE_LIST)
         }
 
         /**
@@ -325,12 +328,12 @@ open class MusicService : MediaBrowserServiceCompat() {
         val description = currentPlaylistItems[currentMediaItemIndex].description
         val position = currentPlayer.currentPosition
 
-        /*serviceScope.launch {
+        serviceScope.launch {
             storage.saveRecentSong(
                 description,
                 position
             )
-        }*/
+        }
     }
 
 
@@ -483,7 +486,7 @@ open class MusicService : MediaBrowserServiceCompat() {
             when (playbackState) {
                 Player.STATE_BUFFERING,
                 Player.STATE_READY -> {
-//                    notificationManager.showNotificationForPlayer(currentPlayer)
+                    notificationManager.showNotificationForPlayer(currentPlayer)
                     if (playbackState == Player.STATE_READY) {
 
                         // When playing/paused save the current media item in persistent
@@ -503,7 +506,7 @@ open class MusicService : MediaBrowserServiceCompat() {
                 }
 
                 else -> {
-//                    notificationManager.hideNotification()
+                    notificationManager.hideNotification()
                 }
             }
         }

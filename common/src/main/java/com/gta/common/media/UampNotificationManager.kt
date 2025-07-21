@@ -26,10 +26,6 @@ const val NOW_PLAYING_CHANNEL_ID = "com.example.android.uamp.media.NOW_PLAYING"
 //通知 ID，用于同一渠道下更新/隐藏通知
 const val NOW_PLAYING_NOTIFICATION_ID = 0xb339 // Arbitrary number used to identify our notification
 
-/**
- * A wrapper class for ExoPlayer's PlayerNotificationManager. It sets up the notification shown to
- * the user during audio playback and provides track metadata, such as track title and icon image.
- */
 //模块内可见，其他模块无法直接访问
 internal class UampNotificationManager(
     private val context: Context,
@@ -96,7 +92,7 @@ internal class UampNotificationManager(
             player: Player,
             callback: PlayerNotificationManager.BitmapCallback
         ): Bitmap? {
-            /*val iconUri = controller.metadata.description.iconUri
+            val iconUri = controller.metadata.description.iconUri
             return if (currentIconUri != iconUri || currentBitmap == null) {
 
                 // Cache the bitmap for the current song so that successive calls to
@@ -111,8 +107,7 @@ internal class UampNotificationManager(
                 null
             } else {
                 currentBitmap
-            }*/
-            return currentBitmap
+            }
         }
 //挂在 IO 线程上同步下载并返回 Bitmap
         private suspend fun resolveUriAsBitmap(uri: Uri): Bitmap? {
