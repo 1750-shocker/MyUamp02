@@ -30,6 +30,9 @@ internal class AlbumArtContentProvider : ContentProvider() {
      * 通过强制要求经由内容URI访问，可在ContentProvider中检查权限并控制内容访问。
      * 为使用MediaItem对象列表，每个MediaItem需要稳定唯一的mediaId。
      * 这种内容URI格式恰好适合作为mediaId，为Android系统提供了请求媒体播放的标准方式
+     * 在构建 MediaItem 的 mediaId 时，可以直接用这种内容 URI，
+     * 系统媒体浏览器（MediaBrowserService）或控制器（MediaController）拿到 mediaId 后，
+     * 通过 ContentResolver.openFile() 就能获取封面，无需额外逻辑
      */
     companion object {
         private val uriMap = mutableMapOf<Uri, Uri>()

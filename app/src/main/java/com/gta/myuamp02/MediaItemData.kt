@@ -4,7 +4,9 @@ package com.gta.myuamp02
 import android.net.Uri
 import androidx.recyclerview.widget.DiffUtil
 
-
+/**
+ * 用于UI显示d数据模型
+ */
 data class MediaItemData(
     val mediaId: String,
     val title: String,

@@ -18,39 +18,41 @@ import com.gta.common.media.extensions.id
 
 //这层就是Repository层
 class MusicServiceConnection(context: Context, serviceComponent: ComponentName) {
+    //表示与 MediaBrowserService 的连接状态，初始为 false，供 UI 观察
     val isConnected = MutableLiveData<Boolean>()
         .apply { postValue(false) }
+    //当服务发出 NETWORK_FAILURE 事件时，此 LiveData 会置为 true，UI 可据此提示网络错误
     val networkFailure = MutableLiveData<Boolean>()
         .apply { postValue(false) }
-    //连接状态回调
+    //用于接收与服务的连接、断开、失败等回调
     private val mediaBrowserConnectionCallback = MediaBrowserConnectionCallback(context)
-    //新建一个MediaBrowser，并且立即连接，连接的结果通过回调返回
+    //创建 MediaBrowserCompat 并立即调用 connect() 发起异步连接
     private val mediaBrowser = MediaBrowserCompat(
         context,
         serviceComponent,
         mediaBrowserConnectionCallback, null
     ).apply { connect() }
-    //获取根节点的MediaId，这些在Service的onGetRoot方法里处理
+    //连接成功后，可通过此属性取到服务端 onGetRoot 返回的根媒体 ID
     val rootMediaId: String get() = mediaBrowser.root
-    //PlaybackStateCompat：Android 媒体库中表示播放状态的类（如播放/暂停/缓冲）
+    //保存当前播放状态（播放、暂停、缓冲等），初始为空状态常量。
     val playbackState = MutableLiveData<PlaybackStateCompat>()
         .apply { postValue(EMPTY_PLAYBACK_STATE) }
-    //当前正在播放的MediaMetadataCompat对象，这里初始化的是空的歌曲
+    //当前播放的媒体元数据，初始为 “无播放” 占位常量
     val nowPlaying = MutableLiveData<MediaMetadataCompat>()
         .apply { postValue(NOTHING_PLAYING) }
 
-    //遥控器，用来控制播放
+    //暴露给外部的播放控制（播放/暂停/跳转等）接口，底层通过 MediaControllerCompat 实现
     val transportControls: MediaControllerCompat.TransportControls
         get() = mediaController.transportControls
-
+//    与服务端 MediaSession 绑定，用于收/发控制和状态更新
     private lateinit var mediaController: MediaControllerCompat
 
     private inner class MediaControllerCallback : MediaControllerCompat.Callback() {
-        //播放器控制之后的状态回调
+        //播放状态改变时，将最新状态推送给 playbackState
         override fun onPlaybackStateChanged(state: PlaybackStateCompat?) {
             playbackState.postValue(state ?: EMPTY_PLAYBACK_STATE)
         }
-        //播放器控制之后，返回当前正在播放的歌曲的元数据
+        //元数据改变时，更新 nowPlaying；若 ID 为空，说明“停止/未播放”，显示占位
         override fun onMetadataChanged(metadata: MediaMetadataCompat?) {
             // When ExoPlayer stops we will receive a callback with "empty" metadata. This is a
             // metadata object which has been instantiated with default values. The default value
@@ -67,7 +69,7 @@ class MusicServiceConnection(context: Context, serviceComponent: ComponentName) 
 
         override fun onQueueChanged(queue: MutableList<MediaSessionCompat.QueueItem>?) {
         }
-
+//接收自定义会话事件（如网络故障），更新 networkFailure
         override fun onSessionEvent(event: String?, extras: Bundle?) {
             super.onSessionEvent(event, extras)
             when (event) {
@@ -80,6 +82,7 @@ class MusicServiceConnection(context: Context, serviceComponent: ComponentName) 
          * [MediaControllerCompat.Callback] (here). But since other connection status events
          * are sent to [MediaBrowserCompat.ConnectionCallback], we catch the disconnect here and
          * send it on to the other callback.
+         * 服务端会话被销毁时，视作连接挂起，转发给 MediaBrowser 回调
          */
         override fun onSessionDestroyed() {
             mediaBrowserConnectionCallback.onConnectionSuspended()
@@ -90,6 +93,9 @@ class MusicServiceConnection(context: Context, serviceComponent: ComponentName) 
         /**
          * Invoked after [MediaBrowserCompat.connect] when the request has successfully
          * completed.
+         * 连接成功后：
+         * 用 sessionToken 构造 MediaControllerCompat 并注册前面定义的回调；
+         * 将 isConnected 置为 true
          */
         override fun onConnected() {
             // Get a MediaController for the MediaSession.
@@ -114,13 +120,15 @@ class MusicServiceConnection(context: Context, serviceComponent: ComponentName) 
             isConnected.postValue(false)
         }
     }
-    //用于 订阅指定媒体ID下的内容变化，当该目录的子项更新时（如新增歌曲），自动通知客户端。
+    //对指定 parentId 目录进行订阅/取消订阅，子项变化时会回调给 SubscriptionCallback
     fun subscribe(parentId: String, callback: MediaBrowserCompat.SubscriptionCallback) {
         mediaBrowser.subscribe(parentId, callback)
     }
     fun unsubscribe(parentId: String, callback: MediaBrowserCompat.SubscriptionCallback) {
         mediaBrowser.unsubscribe(parentId, callback)
     }
+
+    //向服务发送自定义命令并可选地接收结果。只有在已连接时才会执行，否则返回 false
     fun sendCommand(command: String, parameters: Bundle?) =
         sendCommand(command, parameters) { _, _ -> }
     fun sendCommand(
@@ -138,7 +146,7 @@ class MusicServiceConnection(context: Context, serviceComponent: ComponentName) 
         false
     }
     companion object {
-        // For Singleton instantiation.
+        // 使用双重检查锁定实现单例，确保全局只有一份连接管理器
         @Volatile
         private var instance: MusicServiceConnection? = null
 
@@ -149,7 +157,7 @@ class MusicServiceConnection(context: Context, serviceComponent: ComponentName) 
             }
     }
 }
-
+//定义“空播放状态”和“无播放曲目”占位常量，避免 LiveData 中出现 null
 @Suppress("PropertyName")
 val EMPTY_PLAYBACK_STATE: PlaybackStateCompat = PlaybackStateCompat.Builder()
     .setState(PlaybackStateCompat.STATE_NONE, 0, 0f)

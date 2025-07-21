@@ -58,6 +58,7 @@ internal class JsonSource(private val source: Uri) : AbstractMusicSource() {
             val mediaMetadataCompats = musicCat.music.map { song ->
                 // The JSON may have paths that are relative to the source of the JSON
                 // itself. We need to fix them up here to turn them into absolute paths.
+                //修正 source（音频）和 image（封面）字段
                 catalogUri.scheme?.let { scheme ->
                     if (!song.source.startsWith(scheme)) {
                         song.source = baseUri + song.source
@@ -66,21 +67,22 @@ internal class JsonSource(private val source: Uri) : AbstractMusicSource() {
                         song.image = baseUri + song.image
                     }
                 }
+                //将 image 字符串转换为 Uri，再映射到 ContentProvider URI
                 val jsonImageUri = Uri.parse(song.image)
+                //调用 AlbumArtContentProvider.mapUri(...)，把网络图片 URI 转成 content://… 形式。
                 val imageUri = AlbumArtContentProvider.mapUri(jsonImageUri)
-                //从Json文件中映射的对象的属性再映射到MediaItem中
+                //从Json文件中映射的对象的属性再映射到MediaItem中，填充元数据，再补充显示用的封面 URI 和 Cast 用的原始地址
                 MediaMetadataCompat.Builder()
-                    .from(song)
+                    .from(song)//用扩展方法填充常规字段
                     .apply {
                         displayIconUri = imageUri.toString() // Used by ExoPlayer and Notification
                         albumArtUri = imageUri.toString()
-                        // Keep the original artwork URI for being included in Cast metadata object.
+                        //保存原始网络地址，用于 Cast Metadata
                         putString(ORIGINAL_ARTWORK_URI_KEY, jsonImageUri.toString())
                     }
                     .build()
             }.toList()
-            // Add description keys to be used by the ExoPlayer MediaSession extension when
-            // announcing metadata changes.
+            //把每个 metadata 的 bundle 放到 description.extras 中，确保 ExoPlayer 通知更新时能拿到所有信息
             mediaMetadataCompats.forEach { it.description.extras?.putAll(it.bundle) }
             //返回转换后的List<MediaMetadataCompat>
             mediaMetadataCompats
@@ -96,6 +98,20 @@ internal class JsonSource(private val source: Uri) : AbstractMusicSource() {
     }
 }
 
+/**
+ * 负责把 JsonMusic 对象里的字段一一映射到 MediaMetadataCompat.Builder：
+ *
+ * 把 JSON 里以秒为单位的 duration 转成毫秒；
+ * -[object Object]媒体 ID、标题、艺术家、专辑、时长、流派、资源 URI、封面 URI、曲目序号和总数；
+ *
+ * 设置 FLAG 为可播放；
+ *
+ * 再设置显示用的标题、副标题、描述、图标 URI；
+ *
+ * 最后设置 downloadStatus，确保 extras Bundle 存在，后续能携带自定义字段。
+ *
+ *
+ */
 fun MediaMetadataCompat.Builder.from(jsonMusic: JsonMusic): MediaMetadataCompat.Builder {
     // The duration from the JSON is given in seconds, but the rest of the code works in
     // milliseconds. Here's where we convert to the proper units.
