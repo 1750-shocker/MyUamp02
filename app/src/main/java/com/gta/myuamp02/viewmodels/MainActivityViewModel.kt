@@ -82,7 +82,7 @@ class MainActivityViewModel(
                 }
             }
         } else {
-            //如果当前媒体没有准备好，则调用 playFromMediaId 方法播放指定的媒体项
+            //如果当前媒体没有准备好，或点击的媒体不是正在播放的媒体则调用 playFromMediaId 方法播放指定的媒体项
             transportControls.playFromMediaId(mediaItem.mediaId, null)
         }
     }

@@ -31,7 +31,8 @@ class MusicServiceConnection(context: Context, serviceComponent: ComponentName) 
         context,
         serviceComponent,
         mediaBrowserConnectionCallback, null
-    ).apply { connect() }
+    ).apply { connect() }//后台为你执行了 bindService
+
     //连接成功后，可通过此属性取到服务端 onGetRoot 返回的根媒体 ID
     val rootMediaId: String get() = mediaBrowser.root
     //保存当前播放状态（播放、暂停、缓冲等），初始为空状态常量。

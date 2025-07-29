@@ -50,7 +50,7 @@ class MainActivity : AppCompatActivity() {
         })
 
         /**
-         *          * 当前播放媒体的根 ID。当应用启动且与 MusicService 建立连接后，rootMediaId 会被更新，此时会展示初始的媒体列表
+         *当前播放媒体的根 ID。当应用启动且与 MusicService 建立连接后，rootMediaId 会被更新，此时会展示初始的媒体列表
          */
         viewModel.rootMediaId.observe(this,
             Observer<String?> { rootMediaId ->

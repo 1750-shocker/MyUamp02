@@ -83,16 +83,16 @@ internal class UampNotificationManager(
             controller.sessionActivity
 
         override fun getCurrentContentText(player: Player) =
-            controller.metadata.description.subtitle.toString()
+            controller.metadata?.description?.subtitle.toString()?:""
 
         override fun getCurrentContentTitle(player: Player) =
-            controller.metadata.description.title.toString()
+            controller.metadata?.description?.title.toString()?:""
 
         override fun getCurrentLargeIcon(
             player: Player,
             callback: PlayerNotificationManager.BitmapCallback
         ): Bitmap? {
-            val iconUri = controller.metadata.description.iconUri
+            val iconUri = controller.metadata?.description?.iconUri
             return if (currentIconUri != iconUri || currentBitmap == null) {
 
                 // Cache the bitmap for the current song so that successive calls to

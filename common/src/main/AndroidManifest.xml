@@ -4,17 +4,17 @@
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application>
-        <receiver android:name="androidx.media.session.MediaButtonReceiver"
-            android:exported="false">
+        <receiver
+            android:name="androidx.media.session.MediaButtonReceiver"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MEDIA_BUTTON" />
-                <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </receiver>
 
         <provider
             android:name=".media.library.AlbumArtContentProvider"
             android:authorities="com.example.android.uamp"
-            android:exported="false" />
+            android:exported="true" />
     </application>
 </manifest>
