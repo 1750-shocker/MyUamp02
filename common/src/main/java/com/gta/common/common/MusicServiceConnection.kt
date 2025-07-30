@@ -16,9 +16,10 @@ import androidx.media.MediaBrowserServiceCompat
 import com.gta.common.media.NETWORK_FAILURE
 import com.gta.common.media.extensions.id
 
-//这层就是Repository层
+//这层就是Repository层，在InjectUtil中会把MusicService传到serviceComponent
 class MusicServiceConnection(context: Context, serviceComponent: ComponentName) {
     //表示与 MediaBrowserService 的连接状态，初始为 false，供 UI 观察
+    //apply返回对象本身，相当于lambda内不用写this. 这样可以将对象的配置操作统一到一个块中
     val isConnected = MutableLiveData<Boolean>()
         .apply { postValue(false) }
     //当服务发出 NETWORK_FAILURE 事件时，此 LiveData 会置为 true，UI 可据此提示网络错误
@@ -33,7 +34,7 @@ class MusicServiceConnection(context: Context, serviceComponent: ComponentName) 
         mediaBrowserConnectionCallback, null
     ).apply { connect() }//后台为你执行了 bindService
 
-    //连接成功后，可通过此属性取到服务端 onGetRoot 返回的根媒体 ID
+    //连接成功后，直接调用getRoot()取到服务端 onGetRoot 返回的根媒体 ID
     val rootMediaId: String get() = mediaBrowser.root
     //保存当前播放状态（播放、暂停、缓冲等），初始为空状态常量。
     val playbackState = MutableLiveData<PlaybackStateCompat>()

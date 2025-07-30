@@ -61,6 +61,14 @@ class NowPlayingFragment : Fragment() {
             nowPlayingViewModel.mediaMetadata.value?.let { mainActivityViewModel.playMediaId(it.id) }
         }
 
+        binding.prevButton.setOnClickListener {
+            mainActivityViewModel.prevMedia()
+        }
+
+        binding.nextButton.setOnClickListener {
+            mainActivityViewModel.nextMedia()
+        }
+
         // 初始化播放时长和播放进度的显示
         binding.duration.text = NowPlayingFragmentViewModel.NowPlayingMetadata.timestampToMSS(context, 0L)
         binding.position.text = NowPlayingFragmentViewModel.NowPlayingMetadata.timestampToMSS(context, 0L)

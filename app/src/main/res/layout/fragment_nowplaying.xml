@@ -46,14 +46,37 @@
         app:layout_constraintTop_toBottomOf="@id/divider" />
 
     <ImageButton
-        android:id="@+id/media_button"
-        android:layout_width="71dp"
+        android:id="@+id/prev_button"
+        android:layout_width="52dp"
         android:layout_height="52dp"
         android:background="?attr/selectableItemBackground"
         android:scaleType="centerInside"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintTop_toBottomOf="@id/divider"
+        app:srcCompat="@drawable/ic_skip_previous_black_24dp"
+        tools:ignore="ContentDescription" />
+
+    <ImageButton
+        android:id="@+id/media_button"
+        android:layout_width="52dp"
+        android:layout_height="52dp"
+        android:background="?attr/selectableItemBackground"
+        android:scaleType="centerInside"
+        app:layout_constraintLeft_toRightOf="@id/prev_button"
+        app:layout_constraintRight_toLeftOf="@id/next_button"
+        app:layout_constraintTop_toBottomOf="@id/divider"
         app:srcCompat="@drawable/ic_play_arrow_black_24dp"
+        tools:ignore="ContentDescription" />
+
+    <ImageButton
+        android:id="@+id/next_button"
+        android:layout_width="52dp"
+        android:layout_height="52dp"
+        android:background="?attr/selectableItemBackground"
+        android:scaleType="centerInside"
+        app:layout_constraintLeft_toRightOf="@id/media_button"
+        app:layout_constraintTop_toBottomOf="@id/divider"
+        app:srcCompat="@drawable/ic_skip_next_black_24dp"
         tools:ignore="ContentDescription" />
 
     <TextView
@@ -66,7 +89,7 @@
         android:ellipsize="end"
         android:maxLines="1"
         android:textAppearance="@style/TextAppearance.Uamp.Title"
-        app:layout_constraintLeft_toRightOf="@id/media_button"
+        app:layout_constraintLeft_toRightOf="@id/next_button"
         app:layout_constraintRight_toLeftOf="@id/position"
         app:layout_constraintTop_toBottomOf="@id/divider"
         tools:text="Song Title" />
@@ -80,7 +103,7 @@
         android:ellipsize="end"
         android:maxLines="1"
         android:textAppearance="@style/TextAppearance.Uamp.Subtitle"
-        app:layout_constraintLeft_toRightOf="@id/media_button"
+        app:layout_constraintLeft_toRightOf="@id/next_button"
         app:layout_constraintRight_toLeftOf="@id/position"
         app:layout_constraintTop_toBottomOf="@+id/title"
         tools:text="Artist" />

@@ -1,7 +1,6 @@
 package com.gta.common.media
 
 
-import android.app.Notification
 import android.app.PendingIntent
 import android.content.Intent
 import android.net.Uri
@@ -14,7 +13,6 @@ import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
 import android.widget.Toast
-import androidx.core.content.ContextCompat
 import androidx.media.MediaBrowserServiceCompat
 import androidx.media.MediaBrowserServiceCompat.BrowserRoot.EXTRA_RECENT
 import com.google.android.exoplayer2.C
@@ -50,7 +48,6 @@ open class MusicService : MediaBrowserServiceCompat() {
 
     private lateinit var mediaSource: MusicSource
 
-
     //协程标准用法，没有用Android包里的扩展函数啥的
     //使用协程管理异步任务，SupervisorJob 确保子任务失败不会取消整个服务
     private val serviceJob = SupervisorJob()
@@ -62,12 +59,10 @@ open class MusicService : MediaBrowserServiceCompat() {
     //连接 ExoPlayer 与 MediaSession 的桥梁，将系统控制指令转发给播放器!!!关键，很多流程细节隐藏于此
     protected lateinit var mediaSessionConnector: MediaSessionConnector
 
-    //    保存当前播放列表的元数据和正在播放的索引，方便实现“下一首/上一首”及恢复播放位置
+    //保存当前播放列表的元数据和正在播放的索引，方便实现“下一首/上一首”及恢复播放位置
     private var currentPlaylistItems: List<MediaMetadataCompat> = emptyList()
     private var currentMediaItemIndex: Int = 0
 
-    //本地持久化存储，用于保存“最近播放”歌曲信息
-    private lateinit var storage: PersistentStorage
 
     /**
      * 这里必须是懒加载，让我看看onLoadChildren
@@ -149,26 +144,23 @@ open class MusicService : MediaBrowserServiceCompat() {
         mediaSessionConnector.setPlaybackPreparer(UampPlaybackPreparer())
         mediaSessionConnector.setQueueNavigator(UampQueueNavigator(mediaSession))
         mediaSessionConnector.setPlayer(exoPlayer)
-
-//初始化本地存储，用于保存“最近播放”信息
     }
 
     /**
-     * This is the code that causes UAMP to stop playing when swiping the activity away from
-     * recents. The choice to do this is app specific. Some apps stop playback, while others allow
-     * playback to continue and allow users to stop it with the notification.
+     *从最近任务中移除应用时停止UAMP的播放。
+     *  是否这样做是应用特定的选择，有些应用会停止播放，
+     *  而有些则允许播放继续并通过通知让用户停止。
      */
     //初始化本地存储，用于保存“最近播放”信息
     override fun onTaskRemoved(rootIntent: Intent) {
         super.onTaskRemoved(rootIntent)
 
         /**
-         * By stopping playback, the player will transition to [Player.STATE_IDLE] triggering
-         * [Player.EventListener.onPlayerStateChanged] to be called. This will cause the
-         * notification to be hidden and trigger
-         * [PlayerNotificationManager.NotificationListener.onNotificationCancelled] to be called.
-         * The service will then remove itself as a foreground service, and will call
-         * [stopSelf].
+         * 通过停止播放，播放器将转为[Player.STATE_IDLE]状态，
+         * 这会触发[Player.EventListener.onPlayerStateChanged]被调用。
+         * 这将导致通知被隐藏，并触发
+         * [PlayerNotificationManager.NotificationListener.onNotificationCancelled]被调用。
+         * 然后服务将自行移除前台服务状态，并调用[stopSelf]。
          */
         exoPlayer.stop()
     }
@@ -188,10 +180,6 @@ open class MusicService : MediaBrowserServiceCompat() {
         exoPlayer.release()
     }
 
-    /**
-     * Returns the "root" media ID that the client should request to get the list of
-     * [MediaItem]s to browse/play.
-     */
     //返回可浏览的根媒体 ID。如果请求带有 EXTRA_RECENT 标志，则返回“最近播放”根；否则返回普通目录根。
     override fun onGetRoot(
         clientPackageName: String,
@@ -201,13 +189,12 @@ open class MusicService : MediaBrowserServiceCompat() {
         val rootExtras = Bundle().apply {
             putBoolean(
                 MEDIA_SEARCH_SUPPORTED,
-                true
+                false
             )
             putBoolean(CONTENT_STYLE_SUPPORTED, true)
             putInt(CONTENT_STYLE_BROWSABLE_HINT, CONTENT_STYLE_GRID)
             putInt(CONTENT_STYLE_PLAYABLE_HINT, CONTENT_STYLE_LIST)
         }
-
         /**
          * By default return the browsable root. Treat the EXTRA_RECENT flag as a special case
          * and return the recent root instead.语音助手从最近播放开始，其他从__/__根目录开始
@@ -218,11 +205,6 @@ open class MusicService : MediaBrowserServiceCompat() {
         return browserRoot
     }
 
-    /**
-     * Returns (via the [result] parameter) a list of [MediaItem]s that are child
-     * items of the provided [parentMediaId]. See [BrowseTree] for more details on
-     * how this is build/more details about the relationships.
-     */
     //根据 parentMediaId 返回子项列表
     override fun onLoadChildren(
         parentMediaId: String,
@@ -234,8 +216,7 @@ open class MusicService : MediaBrowserServiceCompat() {
          * 如果是最近播放根，则从本地存储取一条记录
          */
             //否则等 mediaSource 就绪后，通过 browseTree 查找对应子节点并发送给客户端
-            // If the media source is ready, the results will be set synchronously here.
-            //那个musicsource在load的时候会变化state，如果是ready的话这里就会直接执行函数，否则会存进缓存，
+            //那个musicSource在load的时候会变化state，如果是ready的话这里就会直接执行函数，否则会存进缓存:
             //mutableListOf<(Boolean) -> Unit>(),,state变成ready后会自动通知来执行
             val resultsSent = mediaSource.whenReady { successfullyInitialized ->
                 if (successfullyInitialized) {
@@ -251,12 +232,12 @@ open class MusicService : MediaBrowserServiceCompat() {
                 }
             }
 
-            // If the results are not ready, the service must "detach" the results before
-            // the method returns. After the source is ready, the lambda above will run,
-            // and the caller will be notified that the results are ready.
-            //
-            // See [MediaItemFragmentViewModel.subscriptionCallback] for how this is passed to the
-            // UI/displayed in the [RecyclerView].
+        // 如果结果尚未就绪，服务必须在方法返回前"分离"结果。
+        // 当数据源就绪后，上面的lambda表达式将会执行，
+        // 调用方会收到结果已就绪的通知。
+        //
+        // 关于如何传递到UI并在[RecyclerView]中显示，
+        // 请参考[MediaItemFragmentViewModel.subscriptionCallback]的实现。
             if (!resultsSent) {
                 //未就绪时调用 result.detach()，待加载完成后再回调
                 result.detach()
@@ -266,7 +247,7 @@ open class MusicService : MediaBrowserServiceCompat() {
 
 
     /**
-     * Load the supplied list of songs and the song to play into the current player.
+     * 加载歌曲和歌曲列表给播放器
      */
     private fun preparePlaylist(
         metadataList: List<MediaMetadataCompat>,
@@ -274,16 +255,12 @@ open class MusicService : MediaBrowserServiceCompat() {
         playWhenReady: Boolean,
         playbackStartPositionMs: Long
     ) {
-        // Since the playlist was probably based on some ordering (such as tracks
-        // on an album), find which window index to play first so that the song the
-        // user actually wants to hear plays first.
-        //找到起始窗口索引
+        //找到歌曲所在专辑的索引
         val initialWindowIndex = if (itemToPlay == null) 0 else metadataList.indexOf(itemToPlay)
         currentPlaylistItems = metadataList
-//停止当前播放
+        //停止当前播放
         exoPlayer.playWhenReady = playWhenReady
         exoPlayer.stop()
-        // Set playlist and prepare.
         //这里才是播放器真正开始播放的地方
         //设置新列表并准备播放
         exoPlayer.setMediaItems(
@@ -292,27 +269,14 @@ open class MusicService : MediaBrowserServiceCompat() {
         exoPlayer.prepare()
     }
 
-    //保存当前播放项及进度到本地，用于“恢复播放”功能（在 onPlayerStateChanged 中调用）
-    private fun saveRecentSongToStorage() {
-
-        // Obtain the current song details *before* saving them on a separate thread, otherwise
-        // the current player may have been unloaded by the time the save routine runs.
-        if (currentPlaylistItems.isEmpty()) {
-            return
-        }
-        val description = currentPlaylistItems[currentMediaItemIndex].description
-        val position = exoPlayer.currentPosition
-
-
-    }
-
-
     /*
-    当外部系统（如车载系统/通知栏）需要显示播放队列时
-    车载系统通过 MediaSession 请求队列信息
-    TimelineQueueNavigator 调用 getMediaDescription
-    返回第N首歌的元数据（封面、标题等）
-    车载系统渲染UI
+    将 `MediaMetadataCompat` 列表转换为 `MediaSessionCompat.QueueItem` 列表。
+    调用 `mediaSession.setQueue(queueItemList)`。
+    调用 `mediaSession.setQueueTitle(title)`。
+    当播放到队列中下一项时，你需要手动调用 `mediaSession.setActiveQueueItemId(id)` 来告诉系统当前播放的是队列中的哪一项。
+     负责响应 `onSkipToNext`、`onSkipToPrevious`、`onSkipToQueueItem` 等队列相关的命令。
+     `MediaSessionConnector` 会利用这个 `QueueNavigator` 来自动更新播放器的播放列表，
+     并同步更新 `MediaSession` 的队列状态，包括自动设置 active item。
     */
     private inner class UampQueueNavigator(
         mediaSession: MediaSessionCompat
@@ -331,8 +295,7 @@ open class MusicService : MediaBrowserServiceCompat() {
     // （如自动播放下一首、缓冲、暂停）都是播放器内部的行为。`Player.Listener` 就是你用来监控这些内部行为的工具。
     private inner class UampPlaybackPreparer : MediaSessionConnector.PlaybackPreparer {
         /*
-        `PlaybackPreparer` 的核心职责是：**将来自客户端的通用播放指令（如“播放这首歌”、“播放这个专辑”、“随便放点什么”）转换成播放器可以理解的具体播放列表。**
-        负责响应系统发来的“从某媒体 ID 播放”或“从搜索播放”的请求，动态构建播放列表
+        `PlaybackPreparer` 的核心职责是：覆盖MediaSessionCompat.Callback 的一堆回调
         场景：用户点击专辑中的第3首歌
         MediaSession 收到 ACTION_PLAY_FROM_MEDIA_ID
         调用 onPrepareFromMediaId("song3", true, null)
@@ -340,8 +303,6 @@ open class MusicService : MediaBrowserServiceCompat() {
         构建该歌曲所属专辑的完整列表（12首歌）
         通知播放器准备播放（从第3首开始）
         */
-
-
         override fun getSupportedPrepareActions(): Long =
             PlaybackStateCompat.ACTION_PREPARE_FROM_MEDIA_ID or
                     PlaybackStateCompat.ACTION_PLAY_FROM_MEDIA_ID or
@@ -349,8 +310,8 @@ open class MusicService : MediaBrowserServiceCompat() {
                     PlaybackStateCompat.ACTION_PLAY_FROM_SEARCH
 
         /**
-         * - **触发时机**：当客户端只调用了 `play()` 或 `prepare()`，没有提供具体的 `mediaId`mediaId` 时。例如，用户在蓝牙设备上按下了“播放”按钮。
-         * - **你的任务**：决定在这种“通用播放”请求下应该播放什么。通常是恢复上次的播放列表，或者播放一个默认/推荐的歌单。
+         * - **触发时机**：当客户端只调用了 `play()` 或 `prepare()`，没有提供具体的 `mediaId`mediaId` 时。例如，用户在蓝牙设备上按下了“播放按钮。
+         * - **你的任务**：决定在这种“通用播放”请求下应该播放什么。通常是恢复上次的播放列表，或者播放一个默认/推荐的歌单。这里原来是从本地缓存读取“最近播放”
          */
         override fun onPrepare(playWhenReady: Boolean) {
             onPrepareFromMediaId(
@@ -378,7 +339,7 @@ open class MusicService : MediaBrowserServiceCompat() {
                     Log.w(TAG, "Content not found: MediaID=$mediaId")
                     // TODO: Notify caller of the error.
                 } else {
-
+                    //C.TIME_UNSET代表一个“未设置”或“无效”的时间值。播放器看到这个值，就会明白应该从头开始播放。
                     val playbackStartPositionMs =
                         extras?.getLong(
                             MEDIA_DESCRIPTION_EXTRAS_START_PLAYBACK_POSITION_MS,
@@ -414,48 +375,11 @@ open class MusicService : MediaBrowserServiceCompat() {
             cb: ResultReceiver?
         ) = false
 
-        /**
-         * Builds a playlist based on a [MediaMetadataCompat].
-         *
-         * TODO: Support building a playlist by artist, genre, etc...
-         *
-         * @param item Item to base the playlist on.
-         * @return a [List] of [MediaMetadataCompat] objects representing a playlist.
-         */
         //按专辑排序生成列表
         private fun buildPlaylist(item: MediaMetadataCompat): List<MediaMetadataCompat> =
             mediaSource.filter { it.album == item.album }.sortedBy { it.trackNumber }
     }
 
-    /**
-     * Listen for notification events.
-     */
-    private inner class PlayerNotificationListener :
-        PlayerNotificationManager.NotificationListener {
-        //推送通知并启动前台服务
-        override fun onNotificationPosted(
-            notificationId: Int,
-            notification: Notification,
-            ongoing: Boolean
-        ) {
-            if (ongoing && !isForegroundService) {
-                ContextCompat.startForegroundService(
-                    applicationContext,
-                    Intent(applicationContext, this@MusicService.javaClass)
-                )// 启动前台服务
-
-                startForeground(notificationId, notification)// 将服务设置为前台服务并显示通知
-                isForegroundService = true// 更新状态标志
-            }
-        }
-
-        //// 用户取消通知时停止服务
-        override fun onNotificationCancelled(notificationId: Int, dismissedByUser: Boolean) {
-            stopForeground(true)// 停止前台服务状态
-            isForegroundService = false// 重置状态标志
-            stopSelf()// 停止服务
-        }
-    }
 
     /**
      * 管理通知栏的前台服务生命周期，监听 ExoPlayer 状态变化
@@ -471,25 +395,20 @@ open class MusicService : MediaBrowserServiceCompat() {
          * 根据 `mediaId` 找到完整的 `MediaMetadataCompat` 对象。
          * 调用 `mediaSession.setMetadata(...)`，将新的元数据广播出去。这样，UI
          */
-//**触发时机**：当播放状态改变时，如开始缓冲 (`STATE_BUFFERING`)、准备就绪 (`STATE`STATE_READY`)、播放结束 (`STATE_ENDED`)，或者播放/暂停状态改变时。
-        //**你的任务**：根据这些回调，构建一个 `PlaybackStateCompat` 对象，
+        //手动：当播放状态改变时，根据这些回调，构建一个 `PlaybackStateCompat` 对象，
         // 然后调用 `mediaSession.setPlaybackState(...)` 来更新播放状态。这会同步更新通知栏和所有客户端的播放/暂停按钮状态
+
+        //playWhenReady 表示播放器是否准备好播放并继续播放；playbackState 是当前的播放器状态（如播放中、暂停、缓冲等）。开发者可以根据这些信息来更新 UI 或进行其他操作。
         override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
             when (playbackState) {
                 Player.STATE_BUFFERING,
                 Player.STATE_READY -> {
                     if (playbackState == Player.STATE_READY) {
 
-                        // When playing/paused save the current media item in persistent
-                        // storage so that playback can be resumed between device reboots.
-                        // Search for "media resumption" for more information.
-                        saveRecentSongToStorage()
-
                         if (!playWhenReady) {
-                            // If playback is paused we remove the foreground state which allows the
-                            // notification to be dismissed. An alternative would be to provide a
-                            // "close" button in the notification which stops playback and clears
-                            // the notification.
+                            // 如果播放暂停，我们移除前台状态，这将允许通知被关闭。
+                            // 另一种方案是在通知中提供一个"关闭"按钮，
+                            // 用于停止播放并清除通知。
                             stopForeground(false)
                             isForegroundService = false
                         }
@@ -500,13 +419,15 @@ open class MusicService : MediaBrowserServiceCompat() {
             }
         }
 
-        //位置或曲目切换时更新 currentMediaItemIndex
+        //在 onEvents 中，多个事件可以同时发生，因此可以一次性捕捉并响应多个变化，而无需为每个事件分别编写单独的回调方法
+        //位置或曲目切换时更新 currentMediaItemIndex(当前播放歌曲在播放列表中的位置)
         override fun onEvents(player: Player, events: Player.Events) {
             if (events.contains(EVENT_POSITION_DISCONTINUITY)
-                || events.contains(EVENT_MEDIA_ITEM_TRANSITION)
+                || events.contains(EVENT_MEDIA_ITEM_TRANSITION)//媒体项发生切换
                 || events.contains(EVENT_PLAY_WHEN_READY_CHANGED)
             ) {
                 currentMediaItemIndex = if (currentPlaylistItems.isNotEmpty()) {
+                    //通过 constrainValue 确保索引值始终在有效范围内（0 ≤ index ≤ 列表长度-1），避免数组越界异常
                     constrainValue(
                         player.currentMediaItemIndex,
                         /* min= */ 0,
@@ -516,7 +437,7 @@ open class MusicService : MediaBrowserServiceCompat() {
             }
         }
 
-        //播放错误时在 UI 弹出提示
+        //当播放器遇到错误时，该方法会被调用。PlaybackException 包含了错误的详细信息，开发者可以根据错误类型进行处理或展示提示信息
         override fun onPlayerError(error: PlaybackException) {
             var message = R.string.generic_error;
             Log.e(TAG, "Player error: " + error.errorCodeName + " (" + error.errorCode + ")");
@@ -547,5 +468,5 @@ private const val CONTENT_STYLE_LIST = 1
 private const val CONTENT_STYLE_GRID = 2
 
 private const val UAMP_USER_AGENT = "uamp.next"
-
+const val MEDIA_DESCRIPTION_EXTRAS_START_PLAYBACK_POSITION_MS = "playback_start_position_ms"
 private const val TAG = "MusicService"

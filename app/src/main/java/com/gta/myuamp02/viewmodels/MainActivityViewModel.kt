@@ -114,6 +114,20 @@ class MainActivityViewModel(
         }
     }
 
+    /**
+     * 播放上一曲
+     */
+    fun prevMedia() {
+        musicServiceConnection.transportControls.skipToPrevious()
+    }
+
+    /**
+     * 播放下一曲
+     */
+    fun nextMedia() {
+        musicServiceConnection.transportControls.skipToNext()
+    }
+
     class Factory(
         private val musicServiceConnection: MusicServiceConnection
     ) : ViewModelProvider.NewInstanceFactory() {
