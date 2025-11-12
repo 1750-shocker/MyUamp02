@@ -1,13 +1,7 @@
 package com.gta.myuamp02
 
-import android.content.ComponentName
 import android.media.AudioManager
 import android.os.Bundle
-import android.support.v4.media.MediaBrowserCompat
-import android.support.v4.media.session.MediaControllerCompat
-import android.view.Menu
-import android.widget.Button
-import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -53,7 +47,7 @@ class MainActivity : AppCompatActivity() {
          *当前播放媒体的根 ID。当应用启动且与 MusicService 建立连接后，rootMediaId 会被更新，此时会展示初始的媒体列表
          */
         viewModel.rootMediaId.observe(this,
-            Observer<String?> { rootMediaId ->
+            Observer { rootMediaId ->
                 rootMediaId?.let { navigateToMediaItem(it) }
             })
 

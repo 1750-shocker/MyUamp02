@@ -52,7 +52,7 @@ class MediaItemFragmentViewModel(
     //播放，暂停，缓冲，播放状态的回调，播放暂停的状态要影响UI的显示
     private val playbackStateObserver = Observer<PlaybackStateCompat> {
         //获取当前播放状态 playbackState
-        val playbackState = it ?: EMPTY_PLAYBACK_STATE
+        val playbackState = it
         //从后台获取当前播放的媒体元数据 metadata
         val metadata = musicServiceConnection.nowPlaying.value ?: NOTHING_PLAYING
         //这个mediaItems是UI展示的数据列表，因为我们要在正在播放的歌曲上显示播放/暂停图标，所以需要更新这个列表。
@@ -64,7 +64,7 @@ class MediaItemFragmentViewModel(
     //类似 playbackStateObserver，但针对 nowPlaying（当前播放元数据）的变化。每当歌曲切换，也会重新 updateState，保证图标跟随切换。
     private val mediaMetadataObserver = Observer<MediaMetadataCompat> {
         val playbackState = musicServiceConnection.playbackState.value ?: EMPTY_PLAYBACK_STATE
-        val metadata = it ?: NOTHING_PLAYING
+        val metadata = it
         if (metadata.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID) != null) {
             _mediaItems.postValue(updateState(playbackState, metadata))
         }

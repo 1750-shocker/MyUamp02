@@ -57,7 +57,7 @@ class NowPlayingFragmentViewModel(
     private val handler = Handler.createAsync(Looper.getMainLooper())
 
     private val playbackStateObserver = Observer<PlaybackStateCompat> {
-        playbackState = it ?: EMPTY_PLAYBACK_STATE
+        playbackState = it
         val metadata = musicServiceConnection.nowPlaying.value ?: NOTHING_PLAYING
         updateState(playbackState, metadata)
     }
