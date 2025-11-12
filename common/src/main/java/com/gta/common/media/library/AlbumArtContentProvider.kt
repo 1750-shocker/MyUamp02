@@ -58,7 +58,8 @@ internal class AlbumArtContentProvider : ContentProvider() {
         //从 uriMap 中获取与传入 URI 对应的远程 URI，如果没有找到映射关系，则抛出 FileNotFoundException
         val remoteUri = uriMap[uri] ?: throw FileNotFoundException(uri.path)
         //通过 context.cacheDir 创建一个本地文件对象，用于缓存下载的专辑封面图像
-        var file = File(context.cacheDir, uri.path)
+        val path = requireNotNull(uri.path) { "URI path cannot be null" }
+        var file = File(context.cacheDir, path)
         //如果文件不存在，则使用 Glide 下载远程 URI 指向的专辑封面图像，并将其作为文件保存
         if (!file.exists()) {
             // Use Glide to download the album art.

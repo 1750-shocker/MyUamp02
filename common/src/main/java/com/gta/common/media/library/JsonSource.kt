@@ -48,7 +48,7 @@ internal class JsonSource(private val source: Uri) : AbstractMusicSource() {
             val musicCat = try {
                 //返回JsonCatalog对象，包含List<JsonMusic>
                 downloadJson(catalogUri)
-            } catch (ioException: IOException) {
+            } catch (_: IOException) {
                 return@withContext null
             }
 

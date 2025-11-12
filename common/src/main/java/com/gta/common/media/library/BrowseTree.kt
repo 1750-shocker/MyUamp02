@@ -2,7 +2,6 @@ package com.gta.common.media.library
 
 
 import android.content.Context
-import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaBrowserCompat.MediaItem
 import android.support.v4.media.MediaMetadataCompat
 import com.gta.common.R
@@ -20,7 +19,7 @@ class BrowseTree(
      * Whether to allow clients which are unknown (not on the allowed list) to use search on this
      * [BrowseTree].
      */
-    val searchableByUnknownCaller = true
+//    val searchableByUnknownCaller = true
 
     /**
      * In this example, there's a single root node (identified by the constant
@@ -42,7 +41,7 @@ class BrowseTree(
             //比直接使用资源ID更灵活，可以用于跨进程传递资源引用
             albumArtUri = RESOURCE_ROOT_URI +
                     context.resources.getResourceEntryName(R.drawable.ic_recommended)
-            flag = MediaBrowserCompat.MediaItem.FLAG_BROWSABLE
+            flag = MediaItem.FLAG_BROWSABLE
         }.build()
 
         val albumsMetadata = MediaMetadataCompat.Builder().apply {
@@ -50,7 +49,7 @@ class BrowseTree(
             title = context.getString(R.string.albums_title)
             albumArtUri = RESOURCE_ROOT_URI +
                     context.resources.getResourceEntryName(R.drawable.ic_album)
-            flag = MediaBrowserCompat.MediaItem.FLAG_BROWSABLE
+            flag = MediaItem.FLAG_BROWSABLE
         }.build()
 
         rootList += recommendedMetadata
@@ -117,7 +116,7 @@ class BrowseTree(
 }
 
 const val UAMP_BROWSABLE_ROOT = "/"
-const val UAMP_EMPTY_ROOT = "@empty@"
+//const val UAMP_EMPTY_ROOT = "@empty@"
 const val UAMP_RECOMMENDED_ROOT = "__RECOMMENDED__"
 const val UAMP_ALBUMS_ROOT = "__ALBUMS__"
 const val UAMP_RECENT_ROOT = "__RECENT__"

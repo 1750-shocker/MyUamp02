@@ -1,7 +1,6 @@
 package com.gta.common.media.library
 
 
-import android.os.Bundle
 import android.support.v4.media.MediaMetadataCompat
 import androidx.annotation.IntDef
 
@@ -69,4 +68,4 @@ abstract class AbstractMusicSource : MusicSource {
         }
 
 }
-private const val TAG = "MusicSource"
+//private const val TAG = "MusicSource"

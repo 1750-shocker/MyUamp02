@@ -237,7 +237,7 @@ inline var MediaMetadataCompat.Builder.flag: Int
 const val METADATA_KEY_UAMP_FLAGS = "com.example.android.uamp.media.METADATA_KEY_UAMP_FLAGS"
 
 
-fun MediaMetadataCompat.toMediaItemMetadata(): com.google.android.exoplayer2.MediaMetadata {
+fun MediaMetadataCompat.toMediaItemMetadata(): MediaMetadata {
     return with(MediaMetadata.Builder()) {
         setTitle(title)
         setDisplayTitle(displayTitle)

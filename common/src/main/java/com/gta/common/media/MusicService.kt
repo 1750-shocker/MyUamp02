@@ -22,7 +22,6 @@ import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.Player.EVENT_MEDIA_ITEM_TRANSITION
 import com.google.android.exoplayer2.Player.EVENT_PLAY_WHEN_READY_CHANGED
 import com.google.android.exoplayer2.Player.EVENT_POSITION_DISCONTINUITY
-import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.exoplayer2.audio.AudioAttributes
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
 import com.google.android.exoplayer2.ext.mediasession.TimelineQueueNavigator
@@ -43,6 +42,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import androidx.core.net.toUri
 
 open class MusicService : MediaBrowserServiceCompat() {
 
@@ -76,7 +76,7 @@ open class MusicService : MediaBrowserServiceCompat() {
     private var isForegroundService = false
 
     private val remoteJsonSource: Uri =
-        Uri.parse("https://storage.googleapis.com/uamp/catalog.json")
+        "https://storage.googleapis.com/uamp/catalog.json".toUri()
 
     //配置音频属性，保证在其他媒体（导航提示、通知音）和音乐之间的合理混音与优先级
     private val uAmpAudioAttributes = AudioAttributes.Builder()
@@ -89,7 +89,7 @@ open class MusicService : MediaBrowserServiceCompat() {
 
     //延迟初始化 ExoPlayer，并绑定音频属性、耳机拔出自动暂停、事件监听
     private val exoPlayer: ExoPlayer by lazy {
-        SimpleExoPlayer.Builder(this).build().apply {
+        ExoPlayer.Builder(this).build().apply {
             setAudioAttributes(uAmpAudioAttributes, true)
             setHandleAudioBecomingNoisy(true)
             addListener(playerListener)
@@ -399,6 +399,7 @@ open class MusicService : MediaBrowserServiceCompat() {
         // 然后调用 `mediaSession.setPlaybackState(...)` 来更新播放状态。这会同步更新通知栏和所有客户端的播放/暂停按钮状态
 
         //playWhenReady 表示播放器是否准备好播放并继续播放；playbackState 是当前的播放器状态（如播放中、暂停、缓冲等）。开发者可以根据这些信息来更新 UI 或进行其他操作。
+        @Deprecated("Deprecated in Java")
         override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
             when (playbackState) {
                 Player.STATE_BUFFERING,
@@ -409,7 +410,7 @@ open class MusicService : MediaBrowserServiceCompat() {
                             // 如果播放暂停，我们移除前台状态，这将允许通知被关闭。
                             // 另一种方案是在通知中提供一个"关闭"按钮，
                             // 用于停止播放并清除通知。
-                            stopForeground(false)
+                            stopForeground(STOP_FOREGROUND_DETACH)
                             isForegroundService = false
                         }
                     }
@@ -439,12 +440,12 @@ open class MusicService : MediaBrowserServiceCompat() {
 
         //当播放器遇到错误时，该方法会被调用。PlaybackException 包含了错误的详细信息，开发者可以根据错误类型进行处理或展示提示信息
         override fun onPlayerError(error: PlaybackException) {
-            var message = R.string.generic_error;
-            Log.e(TAG, "Player error: " + error.errorCodeName + " (" + error.errorCode + ")");
+            var message = R.string.generic_error
+            Log.e(TAG, "Player error: " + error.errorCodeName + " (" + error.errorCode + ")")
             if (error.errorCode == PlaybackException.ERROR_CODE_IO_BAD_HTTP_STATUS
                 || error.errorCode == PlaybackException.ERROR_CODE_IO_FILE_NOT_FOUND
             ) {
-                message = R.string.error_media_not_found;
+                message = R.string.error_media_not_found
             }
             Toast.makeText(
                 applicationContext,
@@ -467,6 +468,6 @@ private const val CONTENT_STYLE_SUPPORTED = "android.media.browse.CONTENT_STYLE_
 private const val CONTENT_STYLE_LIST = 1
 private const val CONTENT_STYLE_GRID = 2
 
-private const val UAMP_USER_AGENT = "uamp.next"
+//private const val UAMP_USER_AGENT = "uamp.next"
 const val MEDIA_DESCRIPTION_EXTRAS_START_PLAYBACK_POSITION_MS = "playback_start_position_ms"
 private const val TAG = "MusicService"
